@@ -1,0 +1,21 @@
+{
+    "numerical_features": [
+        "Year",
+        "Kilometers_Driven",
+        "Mileage",
+        "Engine",
+        "Power",
+        "Seats"
+    ],
+    "categorical_features": [
+        "Brand",
+        "Model",
+        "Location",
+        "Fuel_Type",
+        "Transmission",
+        "Owner_Type"
+    ],
+    "target_column": "Price",
+    "dataset_name": "train(3).csv",
+    "model_type": "Random Forest Regressor"
+}

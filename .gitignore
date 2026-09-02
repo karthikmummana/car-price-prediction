@@ -1,0 +1,12 @@
+# Python Cache
+__pycache__/
+*.pyc
+
+# Local Saved Models
+model/*.pkl
+
+# Generated Visualizations
+plots/
+
+# Streamlit Local Files
+.streamlit/
