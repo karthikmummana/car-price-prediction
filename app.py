@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,9 +10,9 @@ import base64
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "model" / "car_price_model_final.pkl"
 HERO_IMG_PATH = BASE_DIR / "assets" / "hero_car.jpg"
-DATA_PATH = BASE_DIR / "data" / "train.csv"
+DATA_PATH = BASE_DIR / "data" / "used_cars_dataset_v2.csv"
 if not DATA_PATH.exists():
-    DATA_PATH = BASE_DIR / "train.csv"
+    DATA_PATH = BASE_DIR / "used_cars_dataset_v2.csv"
 
 # Set page config for a premium and professional appearance
 st.set_page_config(
@@ -599,7 +600,7 @@ st.markdown(f"""
             <div class="hero-badge">AI-POWERED USED CAR VALUATION</div>
             <h1 class="hero-title">What's your car worth?</h1>
             <p class="hero-desc">
-                Get an instant estimate of your used car's resale value using machine learning trained on historical used-car data.
+                Get an instant estimate of your used car's resale value using machine learning trained on recent Indian used-car market data.
             </p>
             <div class="hero-features">
                 <span class="hero-feature-item">✓ Data-driven estimate</span>
@@ -648,90 +649,42 @@ except Exception as e:
     st.error(f"⚠️ Failed to load model pipeline. Error: {str(e)}")
     st.stop()
 
-# Robust Brand and Model Parser
-def parse_name(name):
-    if not isinstance(name, str):
-        return 'Unknown', 'Unknown'
-    words = name.split()
-    if len(words) == 0:
-        return 'Unknown', 'Unknown'
-    
-    # 1. Extract Brand
-    if len(words) > 1 and words[0].lower() == 'land' and words[1].lower() == 'rover':
-        brand = 'Land Rover'
-        remaining = words[2:]
-    else:
-        brand = words[0]
-        remaining = words[1:]
-        
-    if brand.lower() == 'isuzu':
-        brand = 'Isuzu'
-        
-    # 2. Handle 'New' prefix
-    if len(remaining) > 0 and remaining[0].lower() == 'new':
-        remaining = remaining[1:]
-        
-    # 3. Extract Model
-    if len(remaining) == 0:
-        return brand, 'Unknown'
-        
-    if len(remaining) > 1 and remaining[0].lower() == 'grand' and remaining[1].lower() in ['i10', 'vitara']:
-        model = 'Grand ' + remaining[1]
-    elif len(remaining) > 1 and remaining[0].lower() == 'wagon' and remaining[1].lower() == 'r':
-        model = 'Wagon R'
-    elif len(remaining) > 1 and remaining[0] in ['1', '3', '5', '6', '7', '8'] and remaining[1].lower() == 'series':
-        model = remaining[0] + ' Series'
-    elif len(remaining) > 1 and remaining[0].lower() == 'range' and remaining[1].lower() == 'rover':
-        model = 'Range Rover'
-    elif len(remaining) > 1 and remaining[1].lower() in ['class', 'class,']:
-        model = remaining[0] + ' Class'
-    elif len(remaining) > 1 and remaining[0].lower() == 's' and remaining[1].lower() == 'cross':
-        model = 'S Cross'
-    elif len(remaining) > 1 and remaining[0].lower() == 'alto' and remaining[1].lower() in ['k10', '800']:
-        model = 'Alto ' + remaining[1]
-    elif len(remaining) > 1 and remaining[0].lower() == 'pajero' and remaining[1].lower() == 'sport':
-        model = 'Pajero Sport'
-    elif len(remaining) > 1 and remaining[0].lower() == 'innova' and remaining[1].lower() == 'crysta':
-        model = 'Innova Crysta'
-    elif len(remaining) > 1 and remaining[0].lower() == 'corolla' and remaining[1].lower() == 'altis':
-        model = 'Corolla Altis'
-    elif len(remaining) > 1 and remaining[0].lower() == 'swift' and remaining[1].lower() == 'dzire':
-        model = 'Swift Dzire'
-    else:
-        model = remaining[0]
-        
-    return brand, model
-
+# Dynamic Brand & Model Mapping from Dataset
 @st.cache_data
 def get_brand_model_mapping():
     if not DATA_PATH.exists():
         return {}
     df = pd.read_csv(DATA_PATH)
-    df['Brand'] = df['Name'].apply(lambda x: parse_name(x)[0])
-    df['Model'] = df['Name'].apply(lambda x: parse_name(x)[1])
+    
+    # Fix brand anomaly
+    mask_tl = df['Brand'] == 'Toyota Land'
+    df.loc[mask_tl, 'model'] = 'Land Cruiser'
+    df.loc[mask_tl, 'Brand'] = 'Toyota'
+    
+    df['Brand'] = df['Brand'].astype(str).str.strip()
+    df['model'] = df['model'].astype(str).str.strip()
+    df['model'] = df['model'].apply(lambda m: m[:-4].strip() if m.endswith('Test') and len(m) > 4 else m)
     
     mapping = {}
     for brand in sorted(df['Brand'].unique()):
-        models = sorted(df[df['Brand'] == brand]['Model'].unique())
+        models = sorted(df[df['Brand'] == brand]['model'].unique())
         mapping[brand] = models
     return mapping
 
 brand_model_mapping = get_brand_model_mapping()
 
-# Input Options (matching dataset schema)
-locations = [
-    'Ahmedabad', 'Bangalore', 'Chennai', 'Coimbatore', 'Delhi', 'Hyderabad', 
-    'Jaipur', 'Kochi', 'Kolkata', 'Mumbai', 'Pune'
-]
-fuels = ['Diesel', 'Petrol', 'Electric']
+# Categorical options matching trained dataset
+fuels = ['Petrol', 'Diesel', 'CNG / Hybrid', 'Hybrid']
 transmissions = ['Manual', 'Automatic']
-owners = ['First', 'Second', 'Third', 'Fourth & Above']
+owners = ['First', 'Second']
 
-# Initialize session states for storing predictions across updates
+# Initialize session state for storing predictions
 if 'prediction' not in st.session_state:
     st.session_state.prediction = None
+if 'prediction_subtext' not in st.session_state:
+    st.session_state.prediction_subtext = ""
 
-# Two Large Cards Side-by-Side
+# Two Balanced Form Cards Side-by-Side
 input_col1, input_col2 = st.columns(2)
 
 with input_col1:
@@ -739,58 +692,53 @@ with input_col1:
     with st.container(border=True):
         st.markdown('<div class="card-inner-title">🚘 Basic Information</div>', unsafe_allow_html=True)
         
-        # Row 1: Car Brand & Location
+        # Row 1: Car Brand & Car Model
         r1_c1, r1_c2 = st.columns(2)
         with r1_c1:
-            brand_list = list(brand_model_mapping.keys()) if brand_model_mapping else ['Audi', 'BMW', 'Hyundai', 'Maruti', 'Mercedes-Benz', 'Toyota']
-            default_brand_idx = brand_list.index("Audi") if "Audi" in brand_list else 0
+            brand_list = list(brand_model_mapping.keys()) if brand_model_mapping else ['Hyundai', 'Maruti Suzuki', 'Honda', 'Toyota', 'Tata', 'Mahindra']
+            default_brand_idx = brand_list.index("Hyundai") if "Hyundai" in brand_list else 0
             brand = st.selectbox("Car Brand", options=brand_list, index=default_brand_idx)
         with r1_c2:
-            location = st.selectbox("Location", options=sorted(locations), index=0)
-            
-        # Row 2: Car Model & Fuel Type
-        r2_c1, r2_c2 = st.columns(2)
-        with r2_c1:
             available_models = brand_model_mapping.get(brand, [])
             default_model_idx = 0
-            if "A3" in available_models:
-                default_model_idx = available_models.index("A3")
-            elif "A4" in available_models:
-                default_model_idx = available_models.index("A4")
-            model = st.selectbox("Car Model", options=available_models if available_models else ['A3', 'A4', 'A6', 'Q3', 'Q5', 'Q7'], index=default_model_idx)
-        with r2_c2:
-            fuel = st.selectbox("Fuel Type", options=fuels, index=0)
+            if "Creta" in available_models:
+                default_model_idx = available_models.index("Creta")
+            elif "Swift" in available_models:
+                default_model_idx = available_models.index("Swift")
+            model = st.selectbox("Car Model", options=available_models if available_models else ['Creta', 'i20', 'Venue'], index=default_model_idx)
             
-        # Row 3: Kilometers Driven & Model Year
-        r3_c1, r3_c2 = st.columns(2)
-        with r3_c1:
-            km_driven = st.number_input("Kilometers Driven", min_value=100, max_value=500000, value=50000, step=1000)
-        with r3_c2:
-            year = st.slider("Model Year", min_value=1998, max_value=2019, value=2017, step=1)
+        # Row 2: Model Year
+        year = st.slider("Model Year", min_value=1998, max_value=2024, value=2019, step=1)
+        
+        # Row 3: Kilometers Driven
+        km_driven = st.number_input("Kilometers Driven", min_value=100, max_value=500000, value=60000, step=1000)
 
 with input_col2:
     # RIGHT CARD — ⚙ Technical Details
     with st.container(border=True):
         st.markdown('<div class="card-inner-title">⚙ Technical Details</div>', unsafe_allow_html=True)
         
-        # Row 1: Transmission & Owner Type
-        r4_c1, r4_c2 = st.columns(2)
-        with r4_c1:
+        # Row 1: Fuel Type & Transmission
+        r2_c1, r2_c2 = st.columns(2)
+        with r2_c1:
+            fuel = st.selectbox("Fuel Type", options=fuels, index=0)
+        with r2_c2:
             transmission = st.selectbox("Transmission", options=transmissions, index=0)
-        with r4_c2:
-            owner = st.selectbox("Owner Type", options=owners, index=0)
             
-        # Row 2: Engine, Max Power, Mileage
-        r5_c1, r5_c2, r5_c3 = st.columns(3)
-        with r5_c1:
-            engine = st.number_input("Engine (CC)", min_value=600, max_value=6000, value=1200, step=50)
-        with r5_c2:
-            max_power = st.number_input("Max Power (bhp)", min_value=30.0, max_value=600.0, value=85.0, step=1.0)
-        with r5_c3:
-            mileage = st.number_input("Mileage (km/l)", min_value=5.0, max_value=35.0, value=18.0, step=0.1)
-            
-        # Row 3: Number of Seats
-        seats = st.slider("Number of Seats", min_value=2, max_value=10, value=5, step=1)
+        # Row 2: Owner Type
+        owner = st.selectbox("Owner Type", options=owners, index=0)
+        
+        # Row 3: Specification Tip / Context Badge
+        st.markdown("""
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 0.75rem 0.95rem; margin-top: 0.45rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: #0788D1; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.35rem;">
+                <span>💡</span> VALUATION FACTOR
+            </div>
+            <div style="font-size: 0.78rem; color: #627D98; line-height: 1.4;">
+                Accurate odometer reading and single-owner history yield stronger market asking price valuations.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 # Helper function to format prediction output in Lakhs
 def format_lakhs(amount):
@@ -805,30 +753,26 @@ with btn_col2:
     estimate_clicked = st.button("✨ Estimate Resale Value", use_container_width=True)
 
 if estimate_clicked:
-    # Build dataframe for inference matching trained model feature schema
-    input_data = pd.DataFrame({
-        'Brand': [brand],
-        'Model': [model],
-        'Location': [location],
-        'Fuel_Type': [fuel],
-        'Transmission': [transmission],
-        'Owner_Type': [owner],
-        'Year': [year],
-        'Kilometers_Driven': [km_driven],
-        'Mileage': [mileage],
-        'Engine': [engine],
-        'Power': [max_power],
-        'Seats': [seats]
-    })
+    # Calculate vehicle age based on dataset baseline
+    calculated_age = max(0, 2024 - int(year))
+    
+    # Build dataframe matching the trained ML pipeline schema
+    input_data = pd.DataFrame([{
+        'Brand': brand,
+        'model': model,
+        'Year': int(year),
+        'Age': int(calculated_age),
+        'kmDriven': float(km_driven),
+        'Transmission': transmission,
+        'Owner': owner,
+        'FuelType': fuel
+    }])
     
     try:
-        # Run through model pipeline
-        prediction = model_pipeline.predict(input_data)
-        predicted_price = prediction[0]
-        formatted_price = format_lakhs(predicted_price)
-        
-        # Persist result to session state
-        st.session_state.prediction = formatted_price
+        # Run inference through ML pipeline
+        predicted_val = model_pipeline.predict(input_data)[0]
+        st.session_state.prediction = format_lakhs(predicted_val)
+        st.session_state.prediction_subtext = f"Estimated asking price based on recent Indian used-car market listings for {year} {brand} {model}."
     except Exception as e:
         st.error(f"Prediction failed. Error: {str(e)}")
 
@@ -853,9 +797,9 @@ if st.session_state.prediction is not None:
             <div class="result-badge-success">
                 <span class="result-badge-dot"></span>AI PREDICTION
             </div>
-            <div class="result-valuation-title">YOUR ESTIMATED MARKET VALUE</div>
+            <div class="result-valuation-title">ESTIMATED USED-CAR ASKING PRICE</div>
             <div class="result-valuation-value">{st.session_state.prediction}</div>
-            <div class="result-valuation-footer">Estimated resale price based on the vehicle specifications provided.</div>
+            <div class="result-valuation-footer">{st.session_state.prediction_subtext}</div>
         </div>
         <div class="result-card-right-art">
             <svg width="100" height="75" viewBox="0 0 100 75" fill="none" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.65;">
@@ -873,6 +817,6 @@ if st.session_state.prediction is not None:
 # Subtle Disclaimer Card
 st.markdown("""
 <div class="disclaimer-card">
-    <span style="font-size: 1rem; color: #0788D1;">ⓘ</span> Estimated from historical used car data. Actual resale value may vary depending on vehicle condition, service history, market demand and factors.
+    <span style="font-size: 1rem; color: #0788D1;">ⓘ</span> Estimate is based on recent Indian used-car listing data. Actual selling price may vary depending on vehicle condition, location, negotiation, and current market conditions.
 </div>
 """, unsafe_allow_html=True)

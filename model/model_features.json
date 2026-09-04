@@ -1,21 +1,23 @@
 {
     "numerical_features": [
         "Year",
-        "Kilometers_Driven",
-        "Mileage",
-        "Engine",
-        "Power",
-        "Seats"
+        "Age",
+        "kmDriven"
     ],
     "categorical_features": [
         "Brand",
-        "Model",
-        "Location",
-        "Fuel_Type",
+        "model",
         "Transmission",
-        "Owner_Type"
+        "Owner",
+        "FuelType"
     ],
-    "target_column": "Price",
-    "dataset_name": "train(3).csv",
-    "model_type": "Random Forest Regressor"
+    "target_column": "AskPrice",
+    "dataset_name": "used_cars_dataset_v2.csv",
+    "dataset_rows_raw": 14993,
+    "dataset_rows_cleaned": 13987,
+    "model_type": "Tuned Random Forest Regressor",
+    "test_r2": 0.793,
+    "test_mae": 1.8655,
+    "test_rmse": 6.7767,
+    "creta_test_predicted_price": 9.51
 }
