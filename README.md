@@ -43,7 +43,7 @@ AutoValue AI addresses this pricing asymmetry by learning nonlinear depreciation
 1. `Brand`: Vehicle manufacturer
 2. `model`: Specific model designation
 3. `Year`: Manufacturing year (1996 to 2024 in cleaned data)
-4. `Age`: Vehicle age derived from listing timeline ($2024 - \text{Year}$)
+4. `Age`: Vehicle age derived from listing timeline (2024 - Year)
 5. `kmDriven`: Cumulative odometer reading
 6. `Transmission`: Gearbox type (`Manual`, `Automatic`)
 7. `Owner`: Ownership count (`First`, `Second`)
@@ -68,7 +68,7 @@ The data preparation pipeline implemented in [`train_model_final.py`](train_mode
    - Standardized Fuel Types into 4 canonical categories: `Petrol`, `Diesel`, `Hybrid`, `CNG / Hybrid`.
    - Capitalized Transmission (`Manual`, `Automatic`) and Owner (`First`, `Second`).
 4. **Outlier & Anomaly Filtering**:
-   - Filtered out 9 invalid records with obvious data entry typo years ($\text{Year} < 1995$) and zero/token down payment listings ($\text{AskPrice} \le 0.1\text{ Lakhs}$).
+   - Filtered out 9 invalid records with obvious data entry typo years (Year < 1995) and zero/token down payment listings (AskPrice $\le$ 0.1 Lakhs).
    - Final cleaned dataset size: **13,987 rows**.
 
 ---
@@ -79,7 +79,7 @@ The final model pipeline utilizes **8 features** (3 numerical + 5 categorical):
 
 ### Numerical Features (3)
 - `Year`: Year of vehicle manufacture
-- `Age`: Age of vehicle in years ($2024 - \text{Year}$)
+- `Age`: Age of vehicle in years (2024 - Year)
 - `kmDriven`: Total distance driven in kilometers
 
 ### Categorical Features (5)
@@ -89,7 +89,7 @@ The final model pipeline utilizes **8 features** (3 numerical + 5 categorical):
 - `Owner`: `First`, `Second`
 - `FuelType`: `Petrol`, `Diesel`, `CNG / Hybrid`, `Hybrid`
 
-> **Note on PostedDate**: $99.8\%$ of records in the dataset were posted in late 2024, and vehicle age is mathematically defined as $2024 - \text{Year}$. Raw `PostedDate` strings were excluded to avoid redundant cardinality and target leakage.
+> **Note on PostedDate**: 99.8% of records in the dataset were posted in late 2024, and vehicle age is mathematically defined as `2024 - Year`. Raw `PostedDate` strings were excluded to avoid redundant cardinality and target leakage.
 
 ---
 
@@ -175,10 +175,10 @@ To confirm that the trained model naturally captures empirical pricing without b
 | Vehicle Specification | Configuration | Predicted Asking Price |
 | :--- | :--- | :---: |
 | **2019 Hyundai Creta** | Petrol, Manual, 1st Owner, 60,000 km | **₹ 9.51 Lakhs** |
-| **2021 Maruti Suzuki Swift** | Petrol, Manual, 1st Owner, 35,000 km | **₹ 6.20 Lakhs** |
-| **2017 Honda City** | Petrol, Automatic, 2nd Owner, 55,000 km | **₹ 7.00 Lakhs** |
-| **2018 Toyota Fortuner** | Diesel, Automatic, 1st Owner, 80,000 km | **₹ 25.28 Lakhs** |
-| **2020 BMW 3 Series** | Diesel, Automatic, 1st Owner, 25,000 km | **₹ 22.84 Lakhs** |
+| **2021 Maruti Suzuki Swift** | Petrol, Manual, 1st Owner, 60,000 km | **₹ 6.20 Lakhs** |
+| **2017 Honda City** | Petrol, Manual, 1st Owner, 60,000 km | **₹ 7.00 Lakhs** |
+| **2018 Toyota Fortuner** | Petrol, Manual, 1st Owner, 60,000 km | **₹ 25.28 Lakhs** |
+| **2020 BMW 3 Series** | Petrol, Manual, 1st Owner, 60,000 km | **₹ 22.84 Lakhs** |
 
 ---
 
@@ -275,7 +275,7 @@ The project is configured for continuous deployment on **Streamlit Community Clo
 
 1. Fork or push the repository to GitHub: `https://github.com/seemakurthisupraja/car-price-prediction`
 2. Connect your GitHub account at [share.streamlit.io](https://share.streamlit.io/).
-3. Select the repository `seemakurthisupraja/car-price-prediction`, branch `main`, and main file `app.py`.
+3. Select the repository `seemakurthisupraja/car-price-prediction`, branch `master` (or `main`), and main file `app.py`.
 4. Click **Deploy**. Streamlit Cloud provisions the environment and deploys the app at:
    👉 **[https://ai-used-car-valuation.streamlit.app/](https://ai-used-car-valuation.streamlit.app/)**
 
