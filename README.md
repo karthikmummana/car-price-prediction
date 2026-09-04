@@ -1,132 +1,241 @@
 # 🚗 AutoValue AI — Used Car Price Prediction
 
-A professional, production-ready machine learning web application that accurately predicts the resale value of used cars in India (in INR Lakhs) based on vehicle specifications and market trends.
+An end-to-end Machine Learning web application that predicts the **estimated used-car asking price** in **INR (₹) Lakhs** for pre-owned vehicles across India. 
 
-Powered by a trained **Random Forest Regressor Pipeline** and an interactive, modern automotive dashboard built with **Streamlit**, AutoValue AI provides instantaneous and reliable data-driven resale price estimates.
+Powered by a **Tuned Random Forest Regressor Pipeline** trained on a recent Indian used-car dataset and delivered through a responsive, daylight-themed **Streamlit** dashboard, AutoValue AI generates real-time, data-driven asking price estimates.
 
 ---
 
 ## 🚀 Live Demo
 
-[AutoValue AI on Streamlit Community Cloud](https://share.streamlit.io/)
+- **Web Application**: [https://ai-used-car-valuation.streamlit.app/](https://ai-used-car-valuation.streamlit.app/)
+- **GitHub Repository**: [https://github.com/seemakurthisupraja/car-price-prediction](https://github.com/seemakurthisupraja/car-price-prediction)
+
+---
+
+## 🎯 Problem Statement
+
+Determining a fair resale valuation for used vehicles in India is challenging due to large variance across brands, trim models, vehicle age, cumulative mileage, fuel technology, transmission types, and ownership history. 
+
+AutoValue AI addresses this pricing asymmetry by learning nonlinear depreciation curves and brand equity patterns from recent Indian used-car market listings, providing buyers and sellers with an instant, data-driven approximate valuation benchmark.
 
 ---
 
 ## ✨ Key Features
 
-- **AI-Powered Resale Estimation**: Real-time predictions computed directly from the trained Machine Learning pipeline.
-- **Brand & Model-Specific Intelligence**: Robust string parsing and brand-to-model dynamic hierarchy.
-- **Location-Aware Valuation**: Incorporates regional market pricing variations across major Indian cities (Mumbai, Delhi, Bangalore, Chennai, Hyderabad, Pune, Kolkata, Ahmedabad, Coimbatore, Jaipur, Kochi).
-- **Comprehensive Vehicle Attributes**: 12 key features including Year, Kilometers Driven, Fuel Type, Transmission, Owner History, Engine CC, Max Power (bhp), Mileage (km/l), and Seats.
-- **Modern Automotive UI**: Polished, responsive, and daylight-themed dashboard featuring an integrated automotive hero background, frosted glass HUD visual, clean input cards, and dynamic valuation cards.
+- **Dynamic Machine Learning Inferences**: Real-time predictions computed directly on-the-fly via a serialized Scikit-Learn pipeline (`model/car_price_model_final.pkl`) without hardcoded outputs.
+- **Brand & Model Hierarchy**: Supports 42 manufacturers and 430 distinct car models with dynamic dropdown filtering.
+- **Automotive UI Dashboard**: Custom styling featuring daylight palette (`#EEF4FA`, `#0788D1`, `#102A43`), frosted glass HUD visual card with animated status indicator, side-by-side specification cards, and wide valuation output with vector SVG accents.
+- **Robust Outlier & Input Handling**: Built-in median imputation and categorical one-hot encoding with `handle_unknown="ignore"` for safe inference on edge cases.
+- **Transparent Valuation Framing**: Transparently labels outputs as estimated used-car asking prices accompanied by contextual market disclaimers.
 
 ---
 
-## 📊 Model Performance
+## 📊 Dataset
 
-Two regression algorithms were trained and rigorously evaluated using an 80/20 train/test split:
+- **File**: [`data/used_cars_dataset_v2.csv`](data/used_cars_dataset_v2.csv)
+- **Total Records (Raw)**: 14,993 rows × 11 columns
+- **Total Records (Cleaned)**: 13,987 rows
+- **Target Variable**: `AskPrice` (Numerical asking price in INR Lakhs)
+- **Dataset Timeline**: Contemporary Indian used-car listings predominantly indexed in late 2024.
 
-| Model | MAE | RMSE | R² Score |
-| :--- | :---: | :---: | :---: |
-| Linear Regression | 3.0604 Lakhs | 5.0256 Lakhs | 0.7836 |
-| **Random Forest Regressor (Selected)** | **1.4109 Lakhs** | **3.4963 Lakhs** | **0.8953** |
-
-> **Selected Model**: The **Random Forest Regressor** achieved an $R^2$ of **0.8953** and a Mean Absolute Error of **1.41 Lakhs**, demonstrating high precision in capturing nonlinear relationships between vehicle wear, engine output, and brand equity.
+### Raw Data Attributes
+1. `Brand`: Vehicle manufacturer
+2. `model`: Specific model designation
+3. `Year`: Manufacturing year (1996 to 2024 in cleaned data)
+4. `Age`: Vehicle age derived from listing timeline ($2024 - \text{Year}$)
+5. `kmDriven`: Cumulative odometer reading
+6. `Transmission`: Gearbox type (`Manual`, `Automatic`)
+7. `Owner`: Ownership count (`First`, `Second`)
+8. `FuelType`: Engine fuel technology (`Petrol`, `Diesel`, `Hybrid`, `CNG / Hybrid`)
+9. `PostedDate`: Listing date
+10. `AdditionInfo`: Listing title and trim description
+11. `AskPrice`: Target asking price string formatted in ₹ Lakhs / Crores
 
 ---
 
-## 🧠 Features Used by the Pipeline
+## 🧹 Data Cleaning and Preprocessing
 
-The serialized pipeline (`model/car_price_model_final.pkl`) expects exactly 12 input features:
+The data preparation pipeline implemented in [`train_model_final.py`](train_model_final.py) executes the following justified steps:
 
-### Categorical Features (6)
-- `Brand`
-- `Model`
-- `Location`
-- `Fuel_Type`
-- `Transmission`
-- `Owner_Type`
+1. **Deduplication**: Removed **997 exact duplicate rows**, reducing the dataset from 14,993 to 13,996 records.
+2. **Numerical Parsing**:
+   - `AskPrice`: Converted string currency representations (handles ₹ symbols, commas, Lakhs, and Crores) into standardized numeric Lakhs.
+   - `kmDriven`: Stripped unit notations (`km`, `,`) and parsed to clean numeric floats.
+3. **Categorical Standardization**:
+   - Standardized split brand names (e.g., `'Toyota Land'` $\to$ Brand: `'Toyota'`, Model: `'Land Cruiser'`).
+   - Cleaned web-scraping suffixes (e.g., `'VentoTest'` $\to$ `'Vento'`).
+   - Standardized Fuel Types into 4 canonical categories: `Petrol`, `Diesel`, `Hybrid`, `CNG / Hybrid`.
+   - Capitalized Transmission (`Manual`, `Automatic`) and Owner (`First`, `Second`).
+4. **Outlier & Anomaly Filtering**:
+   - Filtered out 9 invalid records with obvious data entry typo years ($\text{Year} < 1995$) and zero/token down payment listings ($\text{AskPrice} \le 0.1\text{ Lakhs}$).
+   - Final cleaned dataset size: **13,987 rows**.
 
-### Numerical Features (6)
-- `Year`
-- `Kilometers_Driven`
-- `Mileage`
-- `Engine`
-- `Power`
-- `Seats`
+---
+
+## 🧠 Features Used
+
+The final model pipeline utilizes **8 features** (3 numerical + 5 categorical):
+
+### Numerical Features (3)
+- `Year`: Year of vehicle manufacture
+- `Age`: Age of vehicle in years ($2024 - \text{Year}$)
+- `kmDriven`: Total distance driven in kilometers
+
+### Categorical Features (5)
+- `Brand`: Vehicle manufacturer (42 unique brands)
+- `model`: Car model name (430 unique models)
+- `Transmission`: `Manual`, `Automatic`
+- `Owner`: `First`, `Second`
+- `FuelType`: `Petrol`, `Diesel`, `CNG / Hybrid`, `Hybrid`
+
+> **Note on PostedDate**: $99.8\%$ of records in the dataset were posted in late 2024, and vehicle age is mathematically defined as $2024 - \text{Year}$. Raw `PostedDate` strings were excluded to avoid redundant cardinality and target leakage.
 
 ---
 
 ## ⚙️ Machine Learning Workflow
 
 ```
-Raw Dataset (train.csv)
+Raw Dataset (data/used_cars_dataset_v2.csv — 14,993 rows)
    │
    ▼
-Data Cleaning & Feature Extraction (Engine CC, Power bhp, Mileage km/l, Brand/Model parsed)
+Data Cleaning & Deduplication (13,987 cleaned records)
    │
    ▼
-Train/Test Split (80% Train, 20% Test — No data leakage)
+Train/Test Split (80% Train [11,189 rows] / 20% Test [2,798 rows], random_state=42)
    │
    ▼
-Preprocessing Pipeline (ColumnTransformer with OneHotEncoder & SimpleImputer)
+ColumnTransformer Preprocessing Pipeline
+   ├── Numerical: SimpleImputer(strategy='median')
+   └── Categorical: SimpleImputer(strategy='most_frequent') + OneHotEncoder(handle_unknown='ignore')
    │
    ▼
-Model Training & Hyperparameter Evaluation (Random Forest Regressor)
+Model Benchmarking & Hyperparameter Tuning (6 Regressors evaluated)
    │
    ▼
-Unified Pipeline Serialization (Exported as car_price_model_final.pkl via joblib)
+Final Model Selection: Tuned Random Forest Regressor (R² = 0.7930, MAE = 1.8655 Lakhs)
    │
    ▼
-Interactive Streamlit Application (Production-ready web interface)
+Serialization (Saved to model/car_price_model_final.pkl & model_features.json)
+   │
+   ▼
+Streamlit Web Deployment (Interactive dashboard at app.py)
 ```
+
+---
+
+## 📈 Models Compared & Performance
+
+All models were evaluated on the **same unseen 20% test partition** (2,798 samples) using **Mean Absolute Error (MAE)**, **Root Mean Squared Error (RMSE)**, and **$R^2$ Score**:
+
+| Model | MAE (₹ Lakhs) | RMSE (₹ Lakhs) | $R^2$ Score |
+| :--- | :---: | :---: | :---: |
+| **Linear Regression** | 4.6291 | 10.8891 | 0.4655 |
+| **Random Forest Regressor** | 1.8650 | 6.7904 | 0.7922 |
+| **Extra Trees Regressor** | 1.9014 | 7.5892 | 0.7404 |
+| **HistGradientBoostingRegressor** | 2.8963 | 8.9597 | 0.6382 |
+| **Gradient Boosting Regressor** | 2.5679 | 7.1605 | 0.7689 |
+| **Tuned Random Forest Regressor (Selected)** | **1.8655** | **6.7767** | **0.7930** |
+
+---
+
+## 🏆 Final Model
+
+The **Tuned Random Forest Regressor** was selected as the final production model due to its superior $R^2$ score (**0.7930**), lowest test RMSE (**6.7767 Lakhs**), and robust generalizability across budget, mid-range, and luxury segments.
+
+### Hyperparameters:
+- `n_estimators`: `300`
+- `min_samples_split`: `3`
+- `max_features`: `0.85`
+- `random_state`: `42`
+- `n_jobs`: `-1`
+
+The complete end-to-end preprocessing transformer and tuned regressor are serialized together in [`model/car_price_model_final.pkl`](model/car_price_model_final.pkl). Model metadata is tracked in [`model/model_features.json`](model/model_features.json).
+
+---
+
+## 🔍 Hyundai Creta Sanity Validation
+
+To confirm that the trained model naturally captures empirical pricing without bias or hardcoding, predictions were validated against matching historical listings in the dataset for a **2019 Hyundai Creta (Petrol, Manual, 1st Owner, 50,000–70,000 km)**:
+
+| Metric | Dataset Records | Model Prediction |
+| :--- | :---: | :---: |
+| **Comparable Listings in Dataset** | 3 actual records | — |
+| **Actual Price Range** | **₹ 9.50 – ₹ 9.85 Lakhs** | — |
+| **Actual Mean Price** | **₹ 9.70 Lakhs** | — |
+| **Actual Median Price** | **₹ 9.75 Lakhs** | — |
+| **Model Inferred Output** | — | **₹ 9.51 Lakhs** |
+
+> **Result**: The model prediction (₹ 9.51 Lakhs) sits naturally within the empirical asking price range (₹ 9.50L – ₹ 9.85L) without manual intervention.
+
+---
+
+## 🚘 Sample Predictions
+
+| Vehicle Specification | Configuration | Predicted Asking Price |
+| :--- | :--- | :---: |
+| **2019 Hyundai Creta** | Petrol, Manual, 1st Owner, 60,000 km | **₹ 9.51 Lakhs** |
+| **2021 Maruti Suzuki Swift** | Petrol, Manual, 1st Owner, 35,000 km | **₹ 6.20 Lakhs** |
+| **2017 Honda City** | Petrol, Automatic, 2nd Owner, 55,000 km | **₹ 7.00 Lakhs** |
+| **2018 Toyota Fortuner** | Diesel, Automatic, 1st Owner, 80,000 km | **₹ 25.28 Lakhs** |
+| **2020 BMW 3 Series** | Diesel, Automatic, 1st Owner, 25,000 km | **₹ 22.84 Lakhs** |
+
+---
+
+## 🏗️ Project Architecture & Workflow
+
+1. **User Interaction**: The user selects vehicle attributes across two intuitive cards (*Basic Information* and *Technical Details*).
+2. **Client-Side Validation & Mapping**: Dynamic dropdown menus query the manufacturer's corresponding model catalog.
+3. **Pipeline Ingestion**: Form inputs are structured into a single-row Pandas DataFrame matching the training schema.
+4. **Feature Transformation**: `ColumnTransformer` executes median imputation on numerical values and one-hot encoding on categorical values.
+5. **Inference Execution**: The loaded Random Forest Regressor predicts the expected asking price in Lakhs.
+6. **HUD Presentation**: The formatted price is rendered in the green valuation card along with dynamic vehicle subtext and contextual disclaimers.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Framework**: Streamlit
-- **Machine Learning**: Scikit-Learn, Joblib
-- **Data Manipulation**: Pandas, NumPy
-- **Styling**: Vanilla CSS with custom Google Fonts (Space Grotesk & Inter)
-- **Deployment Platform**: Streamlit Community Cloud
+- **Web Framework**: [Streamlit](https://streamlit.io/) (v1.30+)
+- **Machine Learning**: [Scikit-Learn](https://scikit-learn.org/) (v1.3+)
+- **Model Serialization**: [Joblib](https://joblib.readthedocs.io/)
+- **Data Analysis**: [Pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/)
+- **Styling**: Vanilla CSS, Google Fonts (*Space Grotesk*, *Inter*), SVG Graphics
+- **Deployment Platform**: [Streamlit Community Cloud](https://streamlit.io/cloud)
 
 ---
 
 ## 📁 Repository Structure
 
 ```
-AutoValue-AI/
-│
-├── app.py                      # Main Streamlit application entry point
+car-price-prediction/
+├── app.py                      # Production Streamlit web application
+├── train_model_final.py        # Complete data cleaning, benchmarking & training pipeline
 ├── requirements.txt            # Minimal deployment dependencies
-├── README.md                   # Project documentation
-│
-├── data/
-│   └── train.csv               # Historical used-car dataset
-│
-├── model/
-│   ├── car_price_model_final.pkl  # Trained production Random Forest pipeline
-│   └── model_features.json        # Feature metadata schema
-│
+├── README.md                   # Comprehensive project documentation
+├── .gitignore                  # Git ignore rules
+├── .gitattributes              # Git LFS / line ending rules
+├── .streamlit/
+│   └── config.toml             # Custom daylight theme configuration
 ├── assets/
-│   └── hero_car.jpg            # Automotive hero background visual asset
-│
-└── .streamlit/
-    └── config.toml             # Streamlit theme configuration (#0788D1)
+│   └── hero_car.jpg            # Automotive hero banner image asset
+├── data/
+│   └── used_cars_dataset_v2.csv # Cleaned Indian used-car dataset
+└── model/
+    ├── car_price_model_final.pkl # Serialized Scikit-Learn ML pipeline
+    └── model_features.json      # Model feature schema and test metrics
 ```
 
 ---
 
-## 💻 Local Setup & Execution
+## 💻 Local Installation
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/autovalue-ai.git
-cd autovalue-ai
+git clone https://github.com/seemakurthisupraja/car-price-prediction.git
+cd car-price-prediction
 ```
 
-### 2. Create and Activate a Virtual Environment
+### 2. Create and Activate Virtual Environment
 ```bash
 # Windows
 python -m venv venv
@@ -142,48 +251,55 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Run the Application
+---
+
+## 🏃 Running the Application
+
+### Option A: Launch the Web App
 ```bash
 streamlit run app.py
 ```
-The application will launch locally at `http://localhost:8501`.
+The application will open automatically in your browser at `http://localhost:8501`.
+
+### Option B: Retrain the Machine Learning Model
+```bash
+python train_model_final.py
+```
+This script cleans the dataset, runs comparative benchmarks, tunes the Random Forest regressor, verifies the Hyundai Creta sanity check, and updates `model/car_price_model_final.pkl` and `model/model_features.json`.
 
 ---
 
-## ☁️ Deployment on Streamlit Community Cloud
+## ☁️ Deployment
 
-Follow these steps to deploy AutoValue AI to production on **Streamlit Community Cloud**:
+The project is configured for continuous deployment on **Streamlit Community Cloud**:
 
-1. **Push to GitHub**:
-   Ensure all project files (`app.py`, `requirements.txt`, `model/`, `assets/`, `data/`, `.streamlit/`) are committed and pushed to your GitHub repository:
-   ```bash
-   git add .
-   git commit -m "Prepare AutoValue AI for Streamlit Cloud deployment"
-   git push origin main
-   ```
-
-2. **Open Streamlit Community Cloud**:
-   Navigate to [share.streamlit.io](https://share.streamlit.io/) and log in with your GitHub account.
-
-3. **Create New App**:
-   Click **"Create app"** (or **"New app"**).
-
-4. **Configure Repository Details**:
-   - **Repository**: Select your `autovalue-ai` repository.
-   - **Branch**: `main` (or `master`).
-   - **Main file path**: `app.py`.
-
-5. **Deploy**:
-   Click **"Deploy!"**. Streamlit Cloud will automatically install packages from `requirements.txt` and serve the application globally.
+1. Fork or push the repository to GitHub: `https://github.com/seemakurthisupraja/car-price-prediction`
+2. Connect your GitHub account at [share.streamlit.io](https://share.streamlit.io/).
+3. Select the repository `seemakurthisupraja/car-price-prediction`, branch `main`, and main file `app.py`.
+4. Click **Deploy**. Streamlit Cloud provisions the environment and deploys the app at:
+   👉 **[https://ai-used-car-valuation.streamlit.app/](https://ai-used-car-valuation.streamlit.app/)**
 
 ---
 
-## ⚠️ Disclaimer
+## ⚠️ Limitations & Disclaimer
 
-*This application provides an estimated resale value based on historical used-car transaction data in India. Actual market prices may vary depending on individual vehicle condition, service history, optional equipment, local market demand, and negotiation.*
+- **Asking Price vs. Transaction Price**: The model predicts the **estimated used-car asking price** based on public listing data. Actual realized transaction values may vary.
+- **Unmodeled Factors**: Physical vehicle condition, chassis/engine health, accident history, comprehensive insurance validity, individual service records, city-specific regional road taxes, and buyer-seller negotiations can influence the final market price.
+- **Disclaimer**: *Valuations generated by AutoValue AI represent statistical estimates derived from historical and contemporary listing data and should serve as an informational benchmark rather than a legally binding appraisal.*
+
+---
+
+## 🔮 Future Improvements
+
+- [ ] Integrate deep-learning regression architectures (e.g., TabNet, CatBoost, LightGBM) for comparison.
+- [ ] Add regional city/RTO-based tier adjustments when geographic location data becomes available.
+- [ ] Implement automated confidence interval estimation (e.g., Quantile Regression Forests) to display an expected price range alongside the point estimate.
+- [ ] Build a REST API wrapper using FastAPI for programmatic vehicle valuation queries.
 
 ---
 
 ## 👩‍💻 Author
 
-**Supraja Seemakurthi**
+**Supraja Seemakurthi**  
+- **GitHub**: [@seemakurthisupraja](https://github.com/seemakurthisupraja)  
+- **Project**: [AutoValue AI — Used Car Price Prediction](https://github.com/seemakurthisupraja/car-price-prediction)
