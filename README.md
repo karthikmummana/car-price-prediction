@@ -8,8 +8,8 @@ Powered by a **Tuned Random Forest Regressor Pipeline** trained on a recent Indi
 
 ## 🚀 Live Demo
 
-- **Web Application**: [https://ai-used-car-valuation.streamlit.app/](https://ai-used-car-valuation.streamlit.app/)
-- **GitHub Repository**: [https://github.com/seemakurthisupraja/car-price-prediction](https://github.com/seemakurthisupraja/car-price-prediction)
+- **Web Application:** [AutoValue AI — Live Demo](https://ai-used-car-valuation.streamlit.app/)
+- **GitHub Repository:** [AutoValue AI on GitHub](https://github.com/seemakurthisupraja/car-price-prediction)
 
 ---
 
