@@ -1,16 +1,15 @@
-<<<<<<< HEAD
 # 🚗 AutoValue AI — Used Car Price Prediction
 
-An end-to-end Machine Learning web application that predicts the **estimated used-car asking price** in **INR (₹) Lakhs** for pre-owned vehicles across India. 
+An end-to-end Machine Learning web application that predicts the estimated used-car asking price in INR (₹) Lakhs for pre-owned vehicles across India.
 
-Powered by a **Tuned Random Forest Regressor Pipeline** trained on a recent Indian used-car dataset and delivered through a responsive, daylight-themed **Streamlit** dashboard, AutoValue AI generates real-time, data-driven asking price estimates.
+Powered by a Tuned Random Forest Regressor Pipeline trained on an Indian used-car dataset and delivered through a Streamlit dashboard.
 
 ---
 
 ## 🚀 Live Demo
 
-- **Web Application:** [AutoValue AI — Live Demo](https://ai-used-car-valuation.streamlit.app/)
-- **GitHub Repository:** [AutoValue AI on GitHub](https://github.com/seemakurthisupraja/car-price-prediction)
+- **Web Application:** [AutoValue AI — Live Demo](https://car-price-prediction-kp9bjfvuah7c6hnwjdwlvq.streamlit.app/)
+- **GitHub Repository:** [AutoValue AI on GitHub](https://github.com/karthikmummana/car-price-prediction)
 
 ---
 
@@ -298,13 +297,11 @@ The project is configured for continuous deployment on **Streamlit Community Clo
 - [ ] Build a REST API wrapper using FastAPI for programmatic vehicle valuation queries.
 
 ---
-
 ## 👩‍💻 Author
 
-**Supraja Seemakurthi**  
-- **GitHub**: [@seemakurthisupraja](https://github.com/seemakurthisupraja)  
-- **Project**: [AutoValue AI — Used Car Price Prediction](https://github.com/seemakurthisupraja/car-price-prediction)
-"# car_price_prediction_final" 
-=======
-# car-price-prediction
->>>>>>> 603efd0a08f100cda7d526e313aa9f319cd502c5
+**Karthik Mummana**
+
+- **GitHub**: [@karthikmummana](https://github.com/karthikmummana)
+- **Project**: [Car Price Prediction](https://github.com/karthikmummana/car-price-prediction)
+- **Live Demo**: [AutoValue AI](https://car-price-prediction-kp9bjfvuah7c6hnwjdwlvq.streamlit.app/)
+  
