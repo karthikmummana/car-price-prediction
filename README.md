@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🚗 AutoValue AI — Used Car Price Prediction
 
 An end-to-end Machine Learning web application that predicts the **estimated used-car asking price** in **INR (₹) Lakhs** for pre-owned vehicles across India. 
@@ -304,3 +305,6 @@ The project is configured for continuous deployment on **Streamlit Community Clo
 - **GitHub**: [@seemakurthisupraja](https://github.com/seemakurthisupraja)  
 - **Project**: [AutoValue AI — Used Car Price Prediction](https://github.com/seemakurthisupraja/car-price-prediction)
 "# car_price_prediction_final" 
+=======
+# car-price-prediction
+>>>>>>> 603efd0a08f100cda7d526e313aa9f319cd502c5
