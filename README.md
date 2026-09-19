@@ -271,14 +271,24 @@ This script cleans the dataset, runs comparative benchmarks, tunes the Random Fo
 
 ## ☁️ Deployment
 
-The project is configured for continuous deployment on **Streamlit Community Cloud**:
+The project is deployed using **Streamlit Community Cloud**:
 
-1. Fork or push the repository to GitHub: `https://github.com/seemakurthisupraja/car-price-prediction`
-2. Connect your GitHub account at [share.streamlit.io](https://share.streamlit.io/).
-3. Select the repository `seemakurthisupraja/car-price-prediction`, branch `master` (or `main`), and main file `app.py`.
-4. Click **Deploy**. Streamlit Cloud provisions the environment and deploys the app at:
-   👉 **[https://ai-used-car-valuation.streamlit.app/](https://ai-used-car-valuation.streamlit.app/)**
+1. Push the project repository to GitHub:
+   `https://github.com/karthikmummana/car-price-prediction`
 
+2. Connect your GitHub account to Streamlit Community Cloud.
+
+3. Select the repository:
+   `karthikmummana/car-price-prediction`
+
+4. Select the main file:
+   `app.py`
+
+5. Click **Deploy**.
+
+6. The deployed application is available at:
+
+   👉 **[AutoValue AI — Live Demo](https://car-price-prediction-kp9bjfvuah7c6hnwjdwlvq.streamlit.app/)**
 ---
 
 ## ⚠️ Limitations & Disclaimer
