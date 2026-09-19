@@ -231,7 +231,7 @@ car-price-prediction/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/seemakurthisupraja/car-price-prediction.git
+git clone https://github.com/karthikmummana/car-price-prediction.git
 cd car-price-prediction
 ```
 
